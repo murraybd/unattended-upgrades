@@ -1,0 +1,11 @@
+Origin: Ubuntu
+Label: Ubuntu
+Suite: raring
+Version: 12.04
+Codename: precise
+Date: Fri, 19 Apr 2013  3:48:44 UTC
+Architectures: amd64 armhf i386 powerpc
+Components: main restricted universe multiverse
+Description: Ubuntu Raring 12.04
+SHA256:
+ 1ed191d07455cd6360afc342de66649d12f91b40f7238accf26c7f7619d25881          7094917 main/binary-amd64/Packages

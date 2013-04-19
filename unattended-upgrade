@@ -352,6 +352,51 @@ def upgrade_normal(cache, pkgs_to_upgrade, logfile_dpkg, verbose):
     return res
 
 
+def _find_all_upgrade_partitions(cache, pkgs_to_upgrade, blacklist):
+    """Return a sorted list of minimal package partitions
+    """
+    # double check any changes we do
+    allowed_origins = get_allowed_origins()
+
+    # to upgrade contains the package names
+    to_upgrade = set(pkgs_to_upgrade)
+
+    # find smallest set
+    all_partitions = []
+    for pkgname in sorted(to_upgrade, reverse=True):
+        if SIGNAL_STOP_REQUEST:
+            logging.warn("SIGNAL received, stopping")
+            return True
+        pkg = cache[pkgname]
+        if pkg.is_upgradable:
+            pkg.mark_upgrade()
+        elif not pkg.is_installed:
+            pkg.mark_install()
+        else:
+            continue
+        # double check that we are not running into side effects like
+        # what could have been caused LP: #1020680
+        if not check_changes_for_sanity(cache, allowed_origins, blacklist):
+            logging.error(
+                "Internal error while building a minimal partition."
+                "Cache has not allowed changes")
+            return False
+        # sort is ok, they are going to get upgraded in a single step
+        changes = sorted([pkg.name for pkg in cache.get_changes()])
+        # only add stuff thats not already there, e.g.
+        #   A depends on B
+        #   B depends on A
+        # would appear twice else
+        if not changes in all_partitions:
+            all_partitions.append(changes)
+        cache.clear()
+
+    # show
+    for part in all_partitions:
+        print ("part: %s" % part)
+    return sorted(list(all_partitions), key=lambda p: len(p))
+
+
 def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
                              logfile_dpkg="", verbose=False):
 
@@ -361,43 +406,12 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
     # setup signal handler
     signal.signal(signal.SIGUSR1, signal_handler)
 
-    # double check any changes we do
-    allowed_origins = get_allowed_origins()
+    all_partitions = _find_all_upgrade_partitions(
+        cache, pkgs_to_upgrade, blacklist)
 
-    # to upgrade contains the package names
-    to_upgrade = set(pkgs_to_upgrade)
-    while True:
-        # find smallest set
-        smallest_partition = to_upgrade
-        for pkgname in to_upgrade:
-            if SIGNAL_STOP_REQUEST:
-                logging.warn("SIGNAL received, stopping")
-                return True
-            pkg = cache[pkgname]
-            if pkg.is_upgradable:
-                pkg.mark_upgrade()
-            elif not pkg.is_installed:
-                pkg.mark_install()
-            else:
-                continue
-            # double check that we are not running into side effects like
-            # what could have been caused LP: #1020680
-            if not check_changes_for_sanity(cache, allowed_origins, blacklist):
-                logging.error(
-                    "Internal error while building a minimal partition."
-                    "Cache has not allowed changes")
-                return False
-            changes = [pkg.name for pkg in cache.get_changes()]
-            if len(changes) == 1:
-                logging.debug("found leaf package %s" % pkg.name)
-                smallest_partition = changes
-                break
-            if len(changes) < len(smallest_partition):
-                logging.debug("found partition of size %s (%s)" % (
-                    len(changes), changes))
-                smallest_partition = changes
-            cache.clear()
-
+    for smallest_partition in all_partitions:
+        # XXX: ?
+        to_upgrade = smallest_partition
         # write progress log information
         if len(pkgs_to_upgrade) > 0:
             percent = ((len(pkgs_to_upgrade) - len(to_upgrade)) /
@@ -1126,7 +1140,7 @@ if __name__ == "__main__":
     parser.add_option("", "--dry-run",
                       action="store_true", default=False,
                       help=_("Simulation, download but do not install"))
-    parser.add_option("", "--minimal_upgrade_steps",
+    parser.add_option("--minimal-upgrade-steps", "--minimal_upgrade_steps",
                       action="store_true", default=False,
                       help=_("Upgrade in minimal steps (and allow "
                              "interrupting with SIGINT"))

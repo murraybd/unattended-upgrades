@@ -1,0 +1,15 @@
+Package: pkg1
+Version: 2.0
+Priority: optional
+Installed-Size: 942
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Replaces: account-plugin-empathy
+Filename: pool/main/e/empathy/account-plugin-aim_3.6.4-0ubuntu3_amd64.deb
+Size: 10570
+MD5sum: 852f1d6fda6b42af0f554be1e8eea383
+SHA1: 8e6b61bd9174a23bd38531ddab05b497da0ca088
+SHA256: ec5c294771065b3845d8077b030a1a67945f418f93c16d3d286d640517c25261
+Description: Messaging account plugin for AIM
+Description-md5: d85a903d80c6b4ab4cb0407b56b39310
+

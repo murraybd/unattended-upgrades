@@ -1,0 +1,19 @@
+Package: pkg1
+Status: install ok installed
+Architecture: all
+Version: 1.0
+
+Package: pkg2
+Status: install ok installed
+Architecture: all
+Version: 1.0
+
+Package: pkg3
+Status: install ok installed
+Architecture: all
+Version: 1.0
+
+Package: pkg4
+Status: install ok installed
+Architecture: all
+Version: 1.0
