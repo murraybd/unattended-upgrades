@@ -23,8 +23,9 @@ class MockOptions():
     def __init__(self, debug=True, dry_run=False):
         self.debug = debug
         self.dry_run = dry_run
-        self.minimal_upgrade_steps = False
+        self.minimal_upgrade_steps = True
         self.verbose = False
+        self.apt_debug = False
 
 
 class TestAgainstRealArchive(unittest.TestCase):

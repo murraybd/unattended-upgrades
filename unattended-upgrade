@@ -136,6 +136,14 @@ class LogInstallProgress(apt.progress.base.InstallProgress):
                                          progress_log)
         self.verbose = verbose
         self.output_logfd = None
+        with open(self.logfile_dpkg, "a") as f:
+            f.write(
+                "Log created: %s\n" % datetime.datetime.now().isoformat('-'))
+
+    def finish_update(self):
+        with open(self.logfile_dpkg, "a") as f:
+            end_time = datetime.datetime.now().isoformat('-')
+            f.write("Dpkg finished: %s\n\n" % end_time)
 
     def status_change(self, pkg, percent, status):
         with open(self.progress_log, "w") as f:
@@ -182,7 +190,8 @@ class LogInstallProgress(apt.progress.base.InstallProgress):
     def _redirect_output(self):
         # do not create log in dry-run mode, just output to stdout/stderr
         if not apt_pkg.config.find_b("Debug::pkgDPkgPM", False):
-            logfd = os.open(self.logfile_dpkg, os.O_RDWR | os.O_CREAT, 0o644)
+            logfd = os.open(
+                self.logfile_dpkg, os.O_RDWR | os.O_CREAT | os.O_APPEND, 0o644)
             os.dup2(logfd, 1)
             os.dup2(logfd, 2)
 
@@ -404,7 +413,7 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
         if SIGNAL_STOP_REQUEST:
             logging.warning("SIGNAL received, stopping")
             return True
-        logging.debug(
+        logging.info(
             "Applying partition for '%s' of size %s (%s)" % (
                 pkgname,
                 len(possible_partitions[pkgname]),
@@ -431,12 +440,9 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
                                   status="")
 
         # apply changes
-        logging.debug("applying set %s" % smallest_partition)
-
         try:
-            iprogress = LogInstallProgress(logfile_dpkg, verbose)
             with Unlocked():
-                res = cache.commit(install_progress=iprogress)
+                res = cache.commit(install_progress=install_log)
                 if not res:
                     raise Exception("cache.commit() returned false")
             cache.open()
