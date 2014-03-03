@@ -379,6 +379,7 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
     possible_partitions = {}
     # calcualte upgrade sets
     for pkgname in pkgs_to_upgrade:
+        cache.clear()
         pkg = cache[pkgname]
         if pkg.is_upgradable:
             pkg.mark_upgrade()
@@ -393,7 +394,6 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
                 "Cache has not allowed changes")
             continue
         possible_partitions[pkgname] = cache.get_changes()
-        cache.clear()
 
     # sort partitons by size of the required changes
     pkgs_sorted_by_partition_size = sorted(
@@ -404,6 +404,11 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
         if SIGNAL_STOP_REQUEST:
             logging.warning("SIGNAL received, stopping")
             return True
+        logging.debug(
+            "Applying partition for '%s' of size %s (%s)" % (
+                pkgname,
+                len(possible_partitions[pkgname]),
+                [pkg.name for pkg in possible_partitions[pkgname]]))
         pkg = cache[pkgname]
         if pkg.is_upgradable:
             pkg.mark_upgrade()
