@@ -621,7 +621,7 @@ def rewind_cache(cache, pkgs_to_upgrade):
     " set the cache back to the state with packages_to_upgrade "
     cache.clear()
     for pkg2 in pkgs_to_upgrade:
-        pkg2.mark_upgrade()
+        pkg2.mark_install(auto_fix=False, auto_install=False)
 
 
 def host():
