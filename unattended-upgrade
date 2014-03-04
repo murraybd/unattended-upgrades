@@ -136,9 +136,10 @@ class LogInstallProgress(apt.progress.base.InstallProgress):
                                          progress_log)
         self.verbose = verbose
         self.output_logfd = None
-        with open(self.logfile_dpkg, "a") as f:
-            f.write(
-                "Log created: %s\n" % datetime.datetime.now().isoformat('-'))
+        if self.logfile_dpkg:
+            with open(self.logfile_dpkg, "a") as f:
+                f.write("Log created: %s\n" %
+                        datetime.datetime.now().isoformat('-'))
 
     def finish_update(self):
         with open(self.logfile_dpkg, "a") as f:
@@ -407,7 +408,6 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
         possible_partitions[pkgname] = set([
             pkg.name for pkg in cache.get_changes()])
 
-
     while len(possible_partitions) > 0:
         if SIGNAL_STOP_REQUEST:
             logging.warning("SIGNAL received, stopping")
@@ -432,7 +432,7 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
 
         # write progress log information
         to_upgrade = set([
-            pkg.name for pkg in cache.get_changes()])
+            p.name for p in cache.get_changes()])
         logging.info(
             "Applying partition for '%s' of size %s "
             "(estimated size was %s)" % (
@@ -470,7 +470,7 @@ def upgrade_in_minimal_steps(cache, pkgs_to_upgrade, blacklist,
             possible_partitions[k] = possible_partitions[k] - to_upgrade
             if not possible_partitions[k]:
                 del possible_partitions[k]
-            
+
     return True
 
 
